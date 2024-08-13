@@ -2,6 +2,8 @@
 
 namespace App\Service;
 
+use Illuminate\Pagination\LengthAwarePaginator;
+
 class ApiResponseService
 {
     /**
@@ -37,4 +39,20 @@ public static function success($data=null,$message='op suc',$status): \Illuminat
             "data"=>$data
         ]  ,$status);
     }
+    public static function paginated (LengthAwarePaginator $paginator, string $message = 'Operation successful', int $status = 200): \Illuminate\Http\JsonResponse
+    {
+        return response()->json( [
+            'status' => 'success',
+            'message' => trans(key: $message),
+
+            'data' => $paginator->items(),
+            'pagination'=>[
+                'total' => $paginator->total(),
+                'count' => $paginator->count(),
+                'per_page' => $paginator->perPage(),
+                'current_page' => $paginator->currentPage(),
+                'total_pages' => $paginator->lastPage(),
+
+            ],
+        ], $status);}
 }
