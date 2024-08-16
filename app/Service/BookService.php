@@ -1,11 +1,13 @@
 <?php
 
-namespace App\Services;
+namespace App\Service;
 
 use App\Models\Book;
 use Exception;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class BookService
 {
