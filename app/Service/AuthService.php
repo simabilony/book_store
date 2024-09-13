@@ -1,63 +1,75 @@
 <?php
 
-namespace App\Services;
+namespace App\Service;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use Illuminate\Http\Request;
 
 class AuthService
 {
-    // Attempt to log in a user with the given credentials
-    public function login(array $credentials)
+    public function login(Request $request)
     {
-        if (!$token = Auth::attempt($credentials)) {
-            return [
+        $credentials = $request->only('email', 'password');
+        $token = Auth::attempt($credentials);
+
+        if (!$token) {
+            return response()->json([
                 'status' => 'error',
                 'message' => 'Unauthorized',
-                'code' => 401,
-            ];
+            ], 401);
         }
 
-        return [
+        $user = Auth::user();
+        return response()->json([
             'status' => 'success',
-            'user' => Auth::user(),
-            'token' => $token,
-            'code' => 200,
-        ];
+            'user' => $user,
+            'authorisation' => [
+                'token' => $token,
+                'type' => 'bearer',
+            ]
+        ]);
     }
 
-    // Register a new user with the given data
-    public function register(array $data)
+    public function register(Request $request)
     {
         $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => Hash::make($data['password']),
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
         ]);
 
-        $user->assignRole('client');
-
         $token = Auth::login($user);
-
-        return [
+        return response()->json([
             'status' => 'success',
             'message' => 'User created successfully',
             'user' => $user,
-            'token' => $token,
-            'code' => 201,
-        ];
+            'authorisation' => [
+                'token' => $token,
+                'type' => 'bearer',
+            ]
+        ]);
     }
 
-    // Log out the current user
     public function logout()
     {
         Auth::logout();
-
-        return [
+        return response()->json([
             'status' => 'success',
             'message' => 'Successfully logged out',
-            'code' => 200,
-        ];
+        ]);
+    }
+
+    public function refresh()
+    {
+        return response()->json([
+            'status' => 'success',
+            'user' => Auth::user(),
+            'authorisation' => [
+                'token' => Auth::refresh(),
+                'type' => 'bearer',
+            ]
+        ]);
     }
 }
